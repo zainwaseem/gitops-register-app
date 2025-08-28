@@ -41,23 +41,23 @@ pipeline {
         //     }
         // }
         
-        stage('Push Deployment Manifest') {
+       stage('Push Deployment Manifest') {
     steps {
-        withCredentials([string(credentialsId: 'github', variable: 'GIT_TOKEN')]) {
+        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
             sh '''
-                git config --global user.name "zainwaseem"
+                git config --global user.name "${GIT_USER}"
                 git config --global user.email "zainwaseem9371@gmail.com"
 
-                git remote set-url origin https://zainwaseem:${GIT_TOKEN}@github.com/zainwaseem/gitops-register-app.git
+                git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/zainwaseem/gitops-register-app.git
 
                 git add deployment.yaml
-                git remote -v
                 git commit -m "Updated Deployment Manifest" || echo "No changes to commit"
                 git push origin main
             '''
         }
     }
 }
+
 
 
       
