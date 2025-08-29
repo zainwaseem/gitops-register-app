@@ -48,7 +48,7 @@ pipeline {
                 git config --global user.name "${GIT_USER}"
                 git config --global user.email "zainwaseem9371@gmail.com"
 
-                git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/zainwaseem/gitops-register-app.git
+                git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/zainwaseem/swiggy-clone.git
 
                 git add deployment.yaml
                 git commit -m "Updated Deployment Manifest" || echo "No changes to commit"
