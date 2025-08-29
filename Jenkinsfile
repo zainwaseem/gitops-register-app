@@ -1,5 +1,5 @@
 pipeline {
-    agent { label "Jenkins-Agent" }
+    agent any
 
     environment {
         APP_NAME   = "zaid57/swiggy-clone"
