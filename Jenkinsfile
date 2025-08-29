@@ -1,7 +1,9 @@
 pipeline {
     agent { label "Jenkins-Agent" }
+
     environment {
-              APP_NAME = "register-app-pipeline"
+        APP_NAME   = "zaid57/swiggy-clone"
+        GITOPS_REPO = "https://github.com/zainwaseem/gitops-register-app.git"
     }
 
     stages {
@@ -11,55 +13,41 @@ pipeline {
             }
         }
 
-        stage("Checkout from SCM") {
-               steps {
-                   git branch: 'main', credentialsId: 'github', url: 'https://github.com/zainwaseem/gitops-register-app'
-               }
-        }
-
-        stage("Update the Deployment Tags") {
+        stage("Checkout from GitOps Repo") {
             steps {
-                sh """
-                   cat deployment.yaml
-                   sed -i 's/${APP_NAME}.*/${APP_NAME}:${IMAGE_TAG}/g' deployment.yaml
-                   cat deployment.yaml
-                """
+                git branch: 'main', credentialsId: 'github', url: "${GITOPS_REPO}"
             }
         }
 
-        // stage("Push the changed deployment file to Git") {
-        //     steps {
-        //         sh """
-        //            git config --global user.name "zainwaseem"
-        //            git config --global user.email "zainwaseem9371@gmail.com"
-        //            git add deployment.yaml
-        //            git commit -m "Updated Deployment Manifest"
-        //         """
-        //         withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-        //           sh "git push https://github.com/zainwaseem/gitops-register-app main"
-        //         }
-        //     }
-        // }
-        
-       stage('Push Deployment Manifest') {
-    steps {
-        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-            sh '''
-                git config --global user.name "${GIT_USER}"
-                git config --global user.email "zainwaseem9371@gmail.com"
+        stage("Update the Deployment Image Tag") {
+            steps {
+                sh '''
+                   echo "Before update:"
+                   grep "image:" deployment.yaml || true
 
-                git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/zainwaseem/swiggy-clone.git
+                   sed -i "s|image: .*|image: ${APP_NAME}:${IMAGE_TAG}|g" deployment.yaml
 
-                git add deployment.yaml
-                git commit -m "Updated Deployment Manifest" || echo "No changes to commit"
-                git push origin main
-            '''
+                   echo "After update:"
+                   grep "image:" deployment.yaml || true
+                '''
+            }
         }
-    }
-}
 
+        stage("Push the Updated Manifest to GitOps Repo") {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                    sh '''
+                        git config --global user.name "${GIT_USER}"
+                        git config --global user.email "zainwaseem9371@gmail.com"
 
+                        git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/zainwaseem/gitops-register-app.git
 
-      
+                        git add deployment.yaml
+                        git commit -m "Updated deployment to image ${APP_NAME}:${IMAGE_TAG}" || echo "No changes to commit"
+                        git push origin main
+                    '''
+                }
+            }
+        }
     }
 }
